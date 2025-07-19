@@ -7,6 +7,8 @@ Every calendar day, after the model closes its 09:00–10:00 UTC candle, we:
 2. **Commit a SHA‑256 hash** of that JSON to the repo (`hashes/YYYY‑MM‑DD.txt`).  
    No plaintext predictions are published yet.  
 3. One day later, **reveal yesterday’s JSON** in a new commit *together with* today’s new hash.
+4. Append the day’s **net % return** to `equity_daily/equity_daily.csv`  
+   (details below).
 
 Because each hash is committed **before** its corresponding JSON is ever added to the repo, anyone can independently verify we did **not** tamper with past predictions.
 
@@ -21,6 +23,8 @@ Because each hash is committed **before** its corresponding JSON is ever added t
 ├── hashes/                # SHA‑256 commitment for each prediction payload
 │   ├── 2025-07-18.txt     # Hash for the JSON above (committed on 2025‑07‑18)
 │   └── YYYY-MM-DD.txt
+├── equity_daily/          # Convenience log of realised day‑by‑day returns
+│   └── equity_daily.csv   # Starts at 100 on 2025‑07‑18
 ├── .gitattributes         # Prevents Git from altering newlines in proof files
 └── README.md
 ```
@@ -28,15 +32,17 @@ Because each hash is committed **before** its corresponding JSON is ever added t
 
 ---
 
-## Daily Workflow (UTC Timeline)
+## Daily workflow (UTC timeline)
 
-| Phase | Time (approx) | Visibility | Files touched |
-|-------|---------------|------------|---------------|
-| **Model run**   | 10:00 UTC | private | `predictions/YYYY‑MM‑DD.json` (local) |
-| **Commit hash** | 10:01 UTC | **public** | `hashes/YYYY‑MM‑DD.txt` |
-| **Reveal**      | next day (~10:05 UTC) | **public** | `predictions/YYYY‑MM‑DD.json` + new day’s hash |
+| Phase              | Time (approx) | Public? | Files touched |
+|--------------------|---------------|---------|---------------|
+| Model run          | 10:00 UTC     | No      | `predictions/YYYY‑MM‑DD.json` (local) |
+| Commit hash        | 10:01 UTC     | **Yes** | `hashes/YYYY‑MM‑DD.txt` |
+| Reveal + new hash  | ~10:05 UTC next day | **Yes** | prior‑day `predictions/`, new‑day hash |
+| Append daily PnL   | ~10:05 UTC next day | **Yes** | `equity_daily/equity_daily.csv` |
 
-Every commit is appended linearly; branch protection forbids force‑pushes or merge commits.
+All of the above happen in **one atomic commit** each day; branch protection
+forbids force‑pushes or merge commits.
 
 ---
 
@@ -106,6 +112,19 @@ print("MATCH ✅" if committed == actual else "MISMATCH ❌")
 ```
 *Prediction rule:* `pred_pct > threshold` ⇒ eligible coin.  
 We always trade the **highest** eligible coin at 10 UTC.
+
+---
+
+### `equity_daily/equity_daily.csv`
+
+| Column            | Meaning                                                                    |
+|-------------------|----------------------------------------------------------------------------|
+| **`date`**        | Entry day (09:00 – 10:00 UTC candle)                                       |
+| **`coin`**        | Coin actually traded                                                       |
+| **`entry_px`**    | Close price of the 09:00 – 10:00 candle (day *D*)                          |
+| **`exit_px`**     | Close price of the 09:00 – 10:00 candle (day *D + 1*)                      |
+| **`net_ret_pct`** | `(exit / entry − 1) − 0.20 %` fee/slippage                                 |
+| **`cum_index`**   | Performance index (starts at **100** on 18‑Jul‑2025)                       |
 
 ---
 
