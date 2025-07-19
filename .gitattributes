@@ -1,2 +1,3 @@
 predictions/* -text
 hashes/* -text
+equity_daily/* -text
