@@ -111,7 +111,7 @@ print("MATCH ✅" if committed == actual else "MISMATCH ❌")
 }
 ```
 *Prediction rule:* `pred_pct > threshold` ⇒ eligible coin.  
-We always trade the **highest** eligible coin at 10 UTC.
+We always trade the **highest** eligible coin out of ADA, AVAX, DOGE, SOL, and XLM at 10 UTC.
 
 ---
 
@@ -120,7 +120,7 @@ We always trade the **highest** eligible coin at 10 UTC.
 | Column            | Meaning                                                                    |
 |-------------------|----------------------------------------------------------------------------|
 | **`date`**        | Entry day (09:00 – 10:00 UTC candle)                                       |
-| **`coin`**        | Coin actually traded                                                       |
+| **`coin`**        | Coin actually traded - using -4.2% as threshold                                                       |
 | **`entry_px`**    | Close price of the 09:00 – 10:00 candle (day *D*)                          |
 | **`exit_px`**     | Close price of the 09:00 – 10:00 candle (day *D + 1*)                      |
 | **`net_ret_pct`** | `(exit / entry − 1) − 0.20 %` fee/slippage                                 |
